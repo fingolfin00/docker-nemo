@@ -1,7 +1,17 @@
 FROM archlinux:latest
-MAINTAINER JD
 
 RUN pacman -Suyy --needed --noconfirm
-RUN pacman -Syy --noconfirm wget gcc make openssh subversion git perl gcc-fortran openmpi netcdf-fortran-openmpi
+RUN pacman -Syy --noconfirm wget tar bzip2 gcc make openssh subversion git perl gcc-fortran netcdf-fortran-openmpi
 
+ARG XIOS_ARCH="GCC_LINUX"
+RUN svn co http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS2/trunk xios
+RUN cd xios
+RUN sed -i 's/gmake/make/g' arch/arch-${XIOS_ARCH}.fcm
+RUN sed -i '9i  #include <cstdint.h>' $(find . -type f -name "earcut.hpp")
+RUN ./make_xios --arch ${XIOS_ARCH}
+
+ARG NEMOGCM_VER="4.2.2"
 RUN wget https://forge.nemo-ocean.eu/nemo/nemo/-/archive/${NEMOGCM_VER}/nemo-${NEMOGCM_VER}.tar.bz2
+RUN tar -xf nemo-${NEMOGCM_VER}.tar.bz2
+RUN cd /nemo-${NEMOGCM_VER}
+
